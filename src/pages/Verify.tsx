@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera, Shield, CheckCircle, AlertTriangle, User, FileText } from "lucide-react";
+import { Camera, Shield, CheckCircle, AlertTriangle, User, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { VerificationReceipt } from "@/components/VerificationReceipt";
+import { detectFaceInImage, loadImageFromDataUrl } from "@/utils/faceDetection";
 
 const Verify = () => {
   const { linkId } = useParams();
@@ -21,6 +22,7 @@ const Verify = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [currentAngle, setCurrentAngle] = useState(0); // 0: front, 1: left, 2: right
+  const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     additionalInfo: "",
@@ -60,8 +62,10 @@ const Verify = () => {
     }
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = async () => {
     if (videoRef.current && canvasRef.current) {
+      setIsProcessing(true);
+      
       const canvas = canvasRef.current;
       const video = videoRef.current;
       const context = canvas.getContext('2d');
@@ -72,23 +76,52 @@ const Verify = () => {
       if (context) {
         context.drawImage(video, 0, 0);
         const imageData = canvas.toDataURL('image/jpeg');
-        setCapturedImages(prev => [...prev, imageData]);
         
-        if (currentAngle < 2) {
-          setCurrentAngle(currentAngle + 1);
+        try {
+          // Load the captured image
+          const imageElement = await loadImageFromDataUrl(imageData);
+          
+          // Detect if there's a face in the image
+          const hasFace = await detectFaceInImage(imageElement);
+          
+          if (!hasFace) {
+            toast({
+              title: "No Face Detected",
+              description: "Please ensure your face is clearly visible in the camera and try again.",
+              variant: "destructive"
+            });
+            setIsProcessing(false);
+            return;
+          }
+          
+          // Face detected successfully
+          setCapturedImages(prev => [...prev, imageData]);
+          
+          if (currentAngle < 2) {
+            setCurrentAngle(currentAngle + 1);
+            toast({
+              title: "Face verified!",
+              description: `Now please turn to show your ${angles[currentAngle + 1]}`,
+            });
+          } else {
+            // All photos captured and verified
+            setStep(3);
+            toast({
+              title: "All faces verified!",
+              description: "Please review and submit your information.",
+            });
+          }
+        } catch (error) {
+          console.error('Face detection failed:', error);
           toast({
-            title: "Photo captured!",
-            description: `Now please turn to show your ${angles[currentAngle + 1]}`,
-          });
-        } else {
-          // All photos captured
-          setStep(3);
-          toast({
-            title: "All photos captured!",
-            description: "Please review and submit your information.",
+            title: "Verification Failed",
+            description: "Face detection failed. Please ensure good lighting and try again.",
+            variant: "destructive"
           });
         }
       }
+      
+      setIsProcessing(false);
     }
   };
 
@@ -269,14 +302,28 @@ const Verify = () => {
 
               <div className="bg-yellow-50 p-4 rounded-lg">
                 <p className="text-sm text-yellow-700">
-                  <strong>Live Detection:</strong> Our AI ensures photos are taken in real-time and not uploaded from files. 
-                  Keep your face clearly visible and follow the angle instructions.
+                  <strong>AI Face Detection:</strong> Our system verifies that a real face is present in each photo. 
+                  Ensure good lighting and keep your face clearly visible in the camera frame.
                 </p>
               </div>
 
-              <Button onClick={capturePhoto} className="w-full" size="lg">
-                <Camera className="h-5 w-5 mr-2" />
-                Capture {angles[currentAngle]}
+              <Button 
+                onClick={capturePhoto} 
+                className="w-full" 
+                size="lg"
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Verifying Face...
+                  </>
+                ) : (
+                  <>
+                    <Camera className="h-5 w-5 mr-2" />
+                    Capture {angles[currentAngle]}
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -324,8 +371,9 @@ const Verify = () => {
 
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm text-green-700">
-                  By submitting, you confirm that all information provided is accurate and that the photos 
-                  were taken live during this verification session.
+                  <CheckCircle className="h-4 w-4 inline mr-1" />
+                  All photos have been verified to contain real faces. By submitting, you confirm that all 
+                  information provided is accurate and that the photos were taken live during this verification session.
                 </p>
               </div>
 
