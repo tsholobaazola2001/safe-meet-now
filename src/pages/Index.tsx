@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +9,13 @@ import { SafetyStats } from "@/components/SafetyStats";
 
 const Index = () => {
   const [showLinkForm, setShowLinkForm] = useState(false);
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const features = [
     {
@@ -40,7 +46,11 @@ const Index = () => {
               <h1 className="text-2xl font-bold text-gray-900">SafeMeet</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" className="hidden md:flex">
+              <Button 
+                variant="outline" 
+                className="hidden md:flex"
+                onClick={() => scrollToSection('how-it-works')}
+              >
                 How It Works
               </Button>
               <Button asChild>
@@ -81,6 +91,7 @@ const Index = () => {
               size="lg" 
               variant="outline" 
               className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg"
+              onClick={() => scrollToSection('features')}
             >
               Learn More
             </Button>
@@ -92,7 +103,7 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section id="features" className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h3 className="text-3xl font-bold text-gray-900 mb-4">How SafeMeet Protects You</h3>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -108,7 +119,7 @@ const Index = () => {
       </section>
 
       {/* How It Works */}
-      <section className="bg-white py-16">
+      <section id="how-it-works" className="bg-white py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold text-gray-900 mb-4">Simple. Secure. Effective.</h3>
