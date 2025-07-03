@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, UserCheck, FileText, Heart, AlertTriangle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { GenerateLinkForm } from "@/components/GenerateLinkForm";
 import { FeatureCard } from "@/components/FeatureCard";
 import { SafetyStats } from "@/components/SafetyStats";
@@ -38,9 +39,14 @@ const Index = () => {
               <Shield className="h-8 w-8 text-blue-600" />
               <h1 className="text-2xl font-bold text-gray-900">SafeMeet</h1>
             </div>
-            <Button variant="outline" className="hidden md:flex">
-              How It Works
-            </Button>
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" className="hidden md:flex">
+                How It Works
+              </Button>
+              <Button asChild>
+                <Link to="/login">Sign In</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
