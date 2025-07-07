@@ -53,9 +53,6 @@ const Index = () => {
               >
                 How It Works
               </Button>
-              <Button asChild>
-                <Link to="/login">Sign In</Link>
-              </Button>
             </div>
           </div>
         </div>
