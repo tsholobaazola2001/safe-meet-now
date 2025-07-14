@@ -144,6 +144,26 @@ export const VerificationReceipt = ({ formData, images, linkId }: VerificationRe
             </p>
           </div>
 
+          {/* Panic Button */}
+          <div className="bg-red-50 border border-red-200 p-4 rounded-lg max-w-md mx-auto">
+            <h4 className="font-semibold text-red-800 mb-2">Safety Concern?</h4>
+            <p className="text-sm text-red-700 mb-3">
+              If this person is not who they claim to be or you feel unsafe, click the panic button.
+            </p>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => {
+                if (confirm("Are you sure you want to send a panic alert? This will immediately notify the trusted contact and authorities if needed.")) {
+                  // In a real app, this would trigger emergency protocols
+                  alert("Panic alert sent! Trusted contact and authorities have been notified.");
+                }
+              }}
+            >
+              🚨 Panic Button
+            </Button>
+          </div>
+
           <p className="text-sm text-gray-500">
             Thank you for helping to create a safer meetup environment.
           </p>

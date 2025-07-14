@@ -128,6 +128,11 @@ const Verify = () => {
   const handleSubmit = () => {
     // Simulate verification completion
     setIsComplete(true);
+    
+    // Send notification to the person who generated the link
+    // In a real app, this would be an API call
+    console.log("Sending notification to link generator that verification is complete");
+    
     toast({
       title: "Verification Complete!",
       description: "Your information has been securely submitted and a receipt has been generated.",
