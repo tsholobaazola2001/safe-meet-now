@@ -39,7 +39,7 @@ export const GenerateLinkForm = ({ onClose }: GenerateLinkFormProps) => {
 
   const generateLink = () => {
     const linkId = Math.random().toString(36).substring(2, 15);
-    const link = `${window.location.origin}/verify/${linkId}`;
+    const link = `${window.location.origin}/recipient-details?id=${linkId}`;
     setGeneratedLink(link);
     setStep(3);
   };

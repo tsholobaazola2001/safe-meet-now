@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,10 +11,14 @@ import { useToast } from "@/hooks/use-toast";
 import { VerificationReceipt } from "@/components/VerificationReceipt";
 import { detectFaceInImage, loadImageFromDataUrl } from "@/utils/faceDetection";
 
-const Verify = () => {
-  const { linkId } = useParams();
+export const Verify = () => {
+  const [searchParams] = useSearchParams();
+  const linkId = searchParams.get('id');
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Get recipient details from sessionStorage
+  const recipientDetails = JSON.parse(sessionStorage.getItem('recipientDetails') || '{}');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -162,7 +166,14 @@ const Verify = () => {
   }
 
   if (isComplete) {
-    return <VerificationReceipt formData={formData} images={capturedImages} linkId={linkId} />;
+    return (
+      <VerificationReceipt 
+        formData={formData} 
+        images={capturedImages} 
+        linkId={linkId!}
+        recipientEmail={recipientDetails.email}
+      />
+    );
   }
 
   return (
@@ -398,4 +409,4 @@ const Verify = () => {
   );
 };
 
-export default Verify;
+// Remove default export since we're using named export

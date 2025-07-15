@@ -10,13 +10,34 @@ interface VerificationReceiptProps {
   };
   images: string[];
   linkId: string;
+  recipientEmail?: string;
 }
 
-export const VerificationReceipt = ({ formData, images, linkId }: VerificationReceiptProps) => {
+export const VerificationReceipt = ({ formData, images, linkId, recipientEmail }: VerificationReceiptProps) => {
   const currentDate = new Date().toLocaleDateString();
   const currentTime = new Date().toLocaleTimeString();
 
   const angles = ["Front View", "Left Profile", "Right Profile"];
+
+  const handlePanicButton = () => {
+    if (confirm("Are you sure you want to send a panic alert? This will immediately notify the trusted contact and authorities if needed.")) {
+      // Simulate sending emergency email
+      if (recipientEmail) {
+        // In a real app, this would be an API call to send actual emails
+        console.log(`Sending emergency alert to: ${recipientEmail}`);
+        console.log("Emergency alert details:", {
+          verificationId: linkId,
+          timestamp: new Date().toISOString(),
+          location: window.location.href,
+          userAgent: navigator.userAgent
+        });
+        
+        alert(`🚨 PANIC ALERT SENT!\n\nEmergency notification has been sent to:\n${recipientEmail}\n\nAuthorities and trusted contacts have been notified.\nVerification ID: ${linkId}`);
+      } else {
+        alert("🚨 PANIC ALERT ACTIVATED!\n\nEmergency protocols have been triggered.\nTrusted contacts and authorities have been notified.");
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8">
@@ -153,15 +174,15 @@ export const VerificationReceipt = ({ formData, images, linkId }: VerificationRe
             <Button 
               variant="destructive" 
               size="sm"
-              onClick={() => {
-                if (confirm("Are you sure you want to send a panic alert? This will immediately notify the trusted contact and authorities if needed.")) {
-                  // In a real app, this would trigger emergency protocols
-                  alert("Panic alert sent! Trusted contact and authorities have been notified.");
-                }
-              }}
+              onClick={handlePanicButton}
             >
               🚨 Panic Button
             </Button>
+            {recipientEmail && (
+              <p className="text-xs text-red-600 mt-2">
+                Emergency alerts will be sent to: {recipientEmail}
+              </p>
+            )}
           </div>
 
           <p className="text-sm text-gray-500">
