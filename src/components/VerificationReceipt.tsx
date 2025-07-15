@@ -152,7 +152,25 @@ export const VerificationReceipt = ({ formData, images, linkId, recipientEmail }
               <Download className="h-4 w-4 mr-2" />
               Download Receipt
             </Button>
-            <Button variant="outline" className="flex-1">
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'SafeMeet Verification Receipt',
+                    text: `Verification completed for ${formData.fullName} on ${currentDate}. Verification ID: ${linkId}`,
+                    url: window.location.href
+                  });
+                } else {
+                  // Fallback for browsers that don't support Web Share API
+                  navigator.clipboard.writeText(
+                    `SafeMeet Verification Receipt\nName: ${formData.fullName}\nDate: ${currentDate}\nVerification ID: ${linkId}\nLink: ${window.location.href}`
+                  );
+                  alert('Receipt details copied to clipboard!');
+                }
+              }}
+            >
               <Send className="h-4 w-4 mr-2" />
               Share Receipt
             </Button>

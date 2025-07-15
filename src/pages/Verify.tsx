@@ -137,6 +137,9 @@ export const Verify = () => {
     // In a real app, this would be an API call
     console.log("Sending notification to link generator that verification is complete");
     
+    // Set verification complete in localStorage to trigger panic button on Index page
+    localStorage.setItem('verificationComplete', 'true');
+    
     toast({
       title: "Verification Complete!",
       description: "Your information has been securely submitted and a receipt has been generated.",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, UserCheck, FileText, Heart, AlertTriangle } from "lucide-react";
@@ -9,6 +9,44 @@ import { SafetyStats } from "@/components/SafetyStats";
 
 const Index = () => {
   const [showLinkForm, setShowLinkForm] = useState(false);
+  const [isVerificationComplete, setIsVerificationComplete] = useState(false);
+
+  // Check for verification completion
+  useEffect(() => {
+    const checkVerificationStatus = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const verified = urlParams.get('verified');
+      if (verified === 'true') {
+        setIsVerificationComplete(true);
+      }
+    };
+    
+    checkVerificationStatus();
+    
+    // Listen for storage events to detect verification completion from other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'verificationComplete' && e.newValue === 'true') {
+        setIsVerificationComplete(true);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const handlePanicButton = () => {
+    if (confirm("🚨 EMERGENCY ALERT\n\nAre you sure you want to activate the panic button? This will immediately notify trusted contacts and authorities.")) {
+      // In a real app, this would trigger emergency protocols
+      alert("🚨 PANIC ALERT ACTIVATED!\n\nEmergency notifications have been sent to:\n• Your trusted contacts\n• Local authorities\n• SafeMeet emergency response team\n\nHelp is on the way. Stay in a safe location.");
+      
+      // Log the emergency event
+      console.log("EMERGENCY ALERT TRIGGERED:", {
+        timestamp: new Date().toISOString(),
+        location: window.location.href,
+        userAgent: navigator.userAgent
+      });
+    }
+  };
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -93,6 +131,27 @@ const Index = () => {
               Learn More
             </Button>
           </div>
+
+          {/* Emergency Panic Button - Only visible after verification */}
+          {isVerificationComplete && (
+            <div className="mt-8 bg-red-50 border-2 border-red-200 p-6 rounded-lg max-w-md mx-auto">
+              <h3 className="font-semibold text-red-800 mb-3 text-lg">🚨 Emergency Safety</h3>
+              <p className="text-sm text-red-700 mb-4">
+                If you feel unsafe or the person is not who they claim to be, activate the panic button immediately.
+              </p>
+              <Button 
+                variant="destructive" 
+                size="lg"
+                className="w-full bg-red-600 hover:bg-red-700"
+                onClick={handlePanicButton}
+              >
+                🚨 PANIC BUTTON - EMERGENCY ALERT
+              </Button>
+              <p className="text-xs text-red-600 mt-2 text-center">
+                This will immediately notify your trusted contacts and authorities
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Safety Stats */}
