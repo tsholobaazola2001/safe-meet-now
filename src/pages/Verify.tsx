@@ -140,6 +140,26 @@ export const Verify = () => {
     // Set verification complete in localStorage to trigger panic button on Index page
     localStorage.setItem('verificationComplete', 'true');
     
+    // Notify other tabs/windows about verification completion
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'verificationComplete',
+      newValue: 'true'
+    }));
+
+    // Also try to notify parent window if opened from link
+    if (window.opener) {
+      try {
+        window.opener.postMessage({ type: 'verificationComplete' }, '*');
+      } catch (e) {
+        console.log('Could not notify parent window');
+      }
+    }
+
+    // Navigate back to home with verification complete parameter
+    setTimeout(() => {
+      window.location.href = '/?verified=true';
+    }, 2000);
+    
     toast({
       title: "Verification Complete!",
       description: "Your information has been securely submitted and a receipt has been generated.",
