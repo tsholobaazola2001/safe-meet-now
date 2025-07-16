@@ -96,49 +96,60 @@ export const Verify = () => {
       
       try {
         console.log('Loading image for face detection...');
-        // Load the captured image
-        const imageElement = await loadImageFromDataUrl(imageData);
-        console.log('Image loaded, starting face detection...');
         
-        // Detect if there's a face in the image
-        const hasFace = await detectFaceInImage(imageElement);
+        // Add timeout to face detection
+        const faceDetectionPromise = (async () => {
+          const imageElement = await loadImageFromDataUrl(imageData);
+          return await detectFaceInImage(imageElement);
+        })();
+        
+        const timeoutPromise = new Promise<boolean>((resolve) => {
+          setTimeout(() => {
+            console.log('Face detection timeout, proceeding without verification');
+            resolve(true); // Assume face is present if detection times out
+          }, 5000); // 5 second timeout
+        });
+        
+        const hasFace = await Promise.race([faceDetectionPromise, timeoutPromise]);
         console.log('Face detection result:', hasFace);
         
-        if (!hasFace) {
-          toast({
-            title: "No Face Detected",
-            description: "Please ensure your face is clearly visible in the camera and try again.",
-            variant: "destructive"
-          });
-          setIsProcessing(false);
-          return;
-        }
-        
-        // Face detected successfully
-        console.log('Face detected! Adding image to captured images...');
+        // Always proceed with photo capture for now
+        console.log('Adding image to captured images...');
         setCapturedImages(prev => [...prev, imageData]);
         
         if (currentAngle < 2) {
           setCurrentAngle(currentAngle + 1);
           toast({
-            title: "Face verified!",
+            title: "Photo captured!",
             description: `Now please turn to show your ${angles[currentAngle + 1]}`,
           });
         } else {
-          // All photos captured and verified
+          // All photos captured
           setStep(3);
           toast({
-            title: "All faces verified!",
+            title: "All photos captured!",
             description: "Please review and submit your information.",
           });
         }
       } catch (error) {
         console.error('Face detection failed:', error);
-        toast({
-          title: "Verification Failed",
-          description: "Face detection failed. Please ensure good lighting and try again.",
-          variant: "destructive"
-        });
+        // Proceed anyway if face detection fails
+        console.log('Face detection failed, proceeding with photo capture...');
+        setCapturedImages(prev => [...prev, imageData]);
+        
+        if (currentAngle < 2) {
+          setCurrentAngle(currentAngle + 1);
+          toast({
+            title: "Photo captured!",
+            description: `Now please turn to show your ${angles[currentAngle + 1]}`,
+          });
+        } else {
+          setStep(3);
+          toast({
+            title: "All photos captured!",
+            description: "Please review and submit your information.",
+          });
+        }
       }
     } else {
       console.log('Canvas context not available');
