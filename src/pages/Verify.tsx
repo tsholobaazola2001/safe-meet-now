@@ -67,66 +67,89 @@ export const Verify = () => {
   };
 
   const capturePhoto = async () => {
-    if (videoRef.current && canvasRef.current) {
-      setIsProcessing(true);
+    console.log('Capture photo button clicked');
+    
+    if (!videoRef.current || !canvasRef.current) {
+      console.log('Video or canvas ref is missing');
+      toast({
+        title: "Camera Error",
+        description: "Camera not ready. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    console.log('Starting photo capture process...');
+    
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const context = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    if (context) {
+      context.drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL('image/jpeg');
+      console.log('Image captured, data length:', imageData.length);
       
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      const context = canvas.getContext('2d');
-      
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      if (context) {
-        context.drawImage(video, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg');
+      try {
+        console.log('Loading image for face detection...');
+        // Load the captured image
+        const imageElement = await loadImageFromDataUrl(imageData);
+        console.log('Image loaded, starting face detection...');
         
-        try {
-          // Load the captured image
-          const imageElement = await loadImageFromDataUrl(imageData);
-          
-          // Detect if there's a face in the image
-          const hasFace = await detectFaceInImage(imageElement);
-          
-          if (!hasFace) {
-            toast({
-              title: "No Face Detected",
-              description: "Please ensure your face is clearly visible in the camera and try again.",
-              variant: "destructive"
-            });
-            setIsProcessing(false);
-            return;
-          }
-          
-          // Face detected successfully
-          setCapturedImages(prev => [...prev, imageData]);
-          
-          if (currentAngle < 2) {
-            setCurrentAngle(currentAngle + 1);
-            toast({
-              title: "Face verified!",
-              description: `Now please turn to show your ${angles[currentAngle + 1]}`,
-            });
-          } else {
-            // All photos captured and verified
-            setStep(3);
-            toast({
-              title: "All faces verified!",
-              description: "Please review and submit your information.",
-            });
-          }
-        } catch (error) {
-          console.error('Face detection failed:', error);
+        // Detect if there's a face in the image
+        const hasFace = await detectFaceInImage(imageElement);
+        console.log('Face detection result:', hasFace);
+        
+        if (!hasFace) {
           toast({
-            title: "Verification Failed",
-            description: "Face detection failed. Please ensure good lighting and try again.",
+            title: "No Face Detected",
+            description: "Please ensure your face is clearly visible in the camera and try again.",
             variant: "destructive"
           });
+          setIsProcessing(false);
+          return;
         }
+        
+        // Face detected successfully
+        console.log('Face detected! Adding image to captured images...');
+        setCapturedImages(prev => [...prev, imageData]);
+        
+        if (currentAngle < 2) {
+          setCurrentAngle(currentAngle + 1);
+          toast({
+            title: "Face verified!",
+            description: `Now please turn to show your ${angles[currentAngle + 1]}`,
+          });
+        } else {
+          // All photos captured and verified
+          setStep(3);
+          toast({
+            title: "All faces verified!",
+            description: "Please review and submit your information.",
+          });
+        }
+      } catch (error) {
+        console.error('Face detection failed:', error);
+        toast({
+          title: "Verification Failed",
+          description: "Face detection failed. Please ensure good lighting and try again.",
+          variant: "destructive"
+        });
       }
-      
-      setIsProcessing(false);
+    } else {
+      console.log('Canvas context not available');
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera canvas. Please try again.",
+        variant: "destructive"
+      });
     }
+    
+    setIsProcessing(false);
   };
 
   const handleSubmit = () => {
