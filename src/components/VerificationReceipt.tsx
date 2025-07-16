@@ -1,7 +1,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Download, Shield, Calendar, User, Camera, Send } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CheckCircle, Download, Shield, Calendar, User, Camera, Send, MessageCircle, Mail, Smartphone, ChevronDown } from "lucide-react";
 
 interface VerificationReceiptProps {
   formData: {
@@ -18,6 +19,38 @@ export const VerificationReceipt = ({ formData, images, linkId, recipientEmail }
   const currentTime = new Date().toLocaleTimeString();
 
   const angles = ["Front View", "Left Profile", "Right Profile"];
+
+  const shareText = `SafeMeet Verification Receipt\nName: ${formData.fullName}\nDate: ${currentDate}\nVerification ID: ${linkId}\nLink: ${window.location.href}`;
+  
+  const handleWhatsAppShare = () => {
+    const url = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleSMSShare = () => {
+    const url = `sms:?body=${encodeURIComponent(shareText)}`;
+    window.open(url);
+  };
+
+  const handleEmailShare = () => {
+    const subject = encodeURIComponent('SafeMeet Verification Receipt');
+    const body = encodeURIComponent(shareText);
+    const url = `mailto:?subject=${subject}&body=${body}`;
+    window.open(url);
+  };
+
+  const handleWebShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'SafeMeet Verification Receipt',
+        text: `Verification completed for ${formData.fullName} on ${currentDate}. Verification ID: ${linkId}`,
+        url: window.location.href
+      });
+    } else {
+      navigator.clipboard.writeText(shareText);
+      alert('Receipt details copied to clipboard!');
+    }
+  };
 
   const handlePanicButton = () => {
     if (confirm("Are you sure you want to send a panic alert? This will immediately notify the trusted contact and authorities if needed.")) {
@@ -152,28 +185,33 @@ export const VerificationReceipt = ({ formData, images, linkId, recipientEmail }
               <Download className="h-4 w-4 mr-2" />
               Download Receipt
             </Button>
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: 'SafeMeet Verification Receipt',
-                    text: `Verification completed for ${formData.fullName} on ${currentDate}. Verification ID: ${linkId}`,
-                    url: window.location.href
-                  });
-                } else {
-                  // Fallback for browsers that don't support Web Share API
-                  navigator.clipboard.writeText(
-                    `SafeMeet Verification Receipt\nName: ${formData.fullName}\nDate: ${currentDate}\nVerification ID: ${linkId}\nLink: ${window.location.href}`
-                  );
-                  alert('Receipt details copied to clipboard!');
-                }
-              }}
-            >
-              <Send className="h-4 w-4 mr-2" />
-              Share Receipt
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex-1">
+                  <Send className="h-4 w-4 mr-2" />
+                  Share Receipt
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={handleWhatsAppShare}>
+                  <MessageCircle className="h-4 w-4 mr-2 text-green-600" />
+                  Share via WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSMSShare}>
+                  <Smartphone className="h-4 w-4 mr-2 text-blue-600" />
+                  Share via SMS
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleEmailShare}>
+                  <Mail className="h-4 w-4 mr-2 text-red-600" />
+                  Share via Email
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleWebShare}>
+                  <Send className="h-4 w-4 mr-2 text-gray-600" />
+                  {navigator.share ? 'Share via System' : 'Copy to Clipboard'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="bg-green-50 p-4 rounded-lg max-w-2xl mx-auto">
