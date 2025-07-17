@@ -166,92 +166,41 @@ export const Verify = () => {
   const handleSubmit = async () => {
     setIsProcessing(true);
     
-    try {
-      const folderMap = ['front', 'left', 'right'];
-      const uploadPromises = capturedImages.map(async (imageData, index) => {
-        // Convert base64 to blob
-        const response = await fetch(imageData);
-        const blob = await response.blob();
-        
-        // Create a unique filename
-        const timestamp = Date.now();
-        const filename = `${formData.fullName.replace(/\s+/g, '_')}_${folderMap[index]}_${timestamp}.jpg`;
-        const folder = folderMap[index];
-        
-        // Get upload URL from your API
-        const uploadUrlResponse = await fetch('https://0ysyn35l7f.execute-api.eu-north-1.amazonaws.com/generate-upload-url', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename, folder })
-        });
-        
-        if (!uploadUrlResponse.ok) {
-          throw new Error(`Failed to get upload URL for ${folder} image`);
-        }
-        
-        const uploadData = await uploadUrlResponse.json();
-        
-        // Upload to S3
-        const uploadResponse = await fetch(uploadData.upload_url, {
-          method: 'PUT',
-          body: blob
-        });
-        
-        if (!uploadResponse.ok) {
-          throw new Error(`Failed to upload ${folder} image to S3`);
-        }
-        
-        return { folder, filename, success: true };
-      });
-      
-      // Wait for all uploads to complete
-      const uploadResults = await Promise.all(uploadPromises);
-      console.log('All images uploaded successfully:', uploadResults);
-      
-      // Simulate verification completion
-      setIsComplete(true);
-      
-      // Send notification to the person who generated the link
-      console.log("Sending notification to link generator that verification is complete");
-      
-      // Set verification complete in localStorage to trigger panic button on Index page
-      localStorage.setItem('verificationComplete', 'true');
-      
-      // Notify other tabs/windows about verification completion
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'verificationComplete',
-        newValue: 'true'
-      }));
+    // Simulate verification completion
+    setIsComplete(true);
+    
+    // Send notification to the person who generated the link
+    console.log("Sending notification to link generator that verification is complete");
+    
+    // Set verification complete in localStorage to trigger panic button on Index page
+    localStorage.setItem('verificationComplete', 'true');
+    
+    // Notify other tabs/windows about verification completion
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'verificationComplete',
+      newValue: 'true'
+    }));
 
-      // Also try to notify parent window if opened from link
-      if (window.opener) {
-        try {
-          window.opener.postMessage({ type: 'verificationComplete' }, '*');
-        } catch (e) {
-          console.log('Could not notify parent window');
-        }
+    // Also try to notify parent window if opened from link
+    if (window.opener) {
+      try {
+        window.opener.postMessage({ type: 'verificationComplete' }, '*');
+      } catch (e) {
+        console.log('Could not notify parent window');
       }
-
-      toast({
-        title: "Verification Complete!",
-        description: "Your information and photos have been securely uploaded and a receipt has been generated.",
-      });
-      
-      // Navigate back to home with verification complete parameter
-      setTimeout(() => {
-        window.location.href = '/?verified=true';
-      }, 2000);
-      
-    } catch (error) {
-      console.error('Upload failed:', error);
-      toast({
-        title: "Upload Error",
-        description: "Failed to upload images. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
     }
+
+    toast({
+      title: "Verification Complete!",
+      description: "Your information has been submitted successfully.",
+    });
+    
+    // Navigate back to home with verification complete parameter
+    setTimeout(() => {
+      window.location.href = '/?verified=true';
+    }, 2000);
+    
+    setIsProcessing(false);
   };
 
   const retakePhotos = () => {
