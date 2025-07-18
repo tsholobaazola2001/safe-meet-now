@@ -166,36 +166,75 @@ export const Verify = () => {
   const handleSubmit = async () => {
     setIsProcessing(true);
     
-    // Simulate verification completion
-    setIsComplete(true);
-    
-    // Send notification to the person who generated the link
-    console.log("Sending notification to link generator that verification is complete");
-    
-    // Set verification complete in localStorage to trigger panic button on Index page
-    localStorage.setItem('verificationComplete', 'true');
-    
-    // Notify other tabs/windows about verification completion
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'verificationComplete',
-      newValue: 'true'
-    }));
+    try {
+      // Prepare the API request data
+      const apiData = {
+        fullName: formData.fullName,
+        idNumber: recipientDetails.idNumber,
+        images: {
+          front: capturedImages[0],
+          left: capturedImages[1],
+          right: capturedImages[2]
+        }
+      };
 
-    // Also try to notify parent window if opened from link
-    if (window.opener) {
-      try {
-        window.opener.postMessage({ type: 'verificationComplete' }, '*');
-      } catch (e) {
-        console.log('Could not notify parent window');
+      // Replace with your actual API endpoint
+      const apiEndpoint = 'https://<your-api-id>.execute-api.<region>.amazonaws.com/submitVerification';
+      
+      const response = await fetch(apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status} ${response.statusText}`);
       }
-    }
 
-    toast({
-      title: "Verification Complete!",
-      description: "Your information has been submitted successfully.",
-    });
-    
-    setIsProcessing(false);
+      const result = await response.json();
+      console.log('API Response:', result);
+
+      // Set verification complete
+      setIsComplete(true);
+      
+      // Send notification to the person who generated the link
+      console.log("Sending notification to link generator that verification is complete");
+      
+      // Set verification complete in localStorage to trigger panic button on Index page
+      localStorage.setItem('verificationComplete', 'true');
+      
+      // Notify other tabs/windows about verification completion
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'verificationComplete',
+        newValue: 'true'
+      }));
+
+      // Also try to notify parent window if opened from link
+      if (window.opener) {
+        try {
+          window.opener.postMessage({ type: 'verificationComplete' }, '*');
+        } catch (e) {
+          console.log('Could not notify parent window');
+        }
+      }
+
+      toast({
+        title: "Verification Complete!",
+        description: "Your information has been submitted successfully.",
+      });
+      
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: "Submission Failed",
+        description: error instanceof Error ? error.message : "Failed to submit verification. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const retakePhotos = () => {
@@ -452,11 +491,11 @@ export const Verify = () => {
                 <Button variant="outline" onClick={retakePhotos} className="flex-1">
                   Retake Photos
                 </Button>
-                <Button onClick={handleSubmit} className="flex-1" disabled={isProcessing}>
+                <Button onClick={handleSubmit} className="flex-1" disabled={isProcessing || capturedImages.length !== 3}>
                   {isProcessing ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading Images...
+                      Submitting to Server...
                     </>
                   ) : (
                     "Submit Verification"
