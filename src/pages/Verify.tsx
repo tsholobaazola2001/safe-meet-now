@@ -107,7 +107,7 @@ export const Verify = () => {
           setTimeout(() => {
             console.log('Face detection timeout, do not proceed without verification');
             resolve(false); // Fail if detection times out
-          }, 50000); // 5 second timeout
+          }, 5000); // 5 second timeout
         });
         
         const hasFace = await Promise.race([faceDetectionPromise, timeoutPromise]);

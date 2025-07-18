@@ -6,12 +6,12 @@ let faceDetector: any = null;
 export const initializeFaceDetector = async () => {
   if (!faceDetector) {
     try {
-      faceDetector = await pipeline('object-detection', 'Xenova/yolos-tiny', {
+      faceDetector = await pipeline('object-detection', 'Xenova/detr-resnet-50', {
         device: 'webgpu'
       });
     } catch (error) {
       console.warn('WebGPU not available, falling back to CPU');
-      faceDetector = await pipeline('object-detection', 'Xenova/yolos-tiny');
+      faceDetector = await pipeline('object-detection', 'Xenova/detr-resnet-50');
     }
   }
   return faceDetector;
@@ -37,18 +37,12 @@ export const detectFaceInImage = async (imageElement: HTMLImageElement): Promise
     // Detect objects in the image
     const results = await detector(imageData);
     
-    console.log('Detection results:', results);
+    // Check if any detected object is a person (which typically includes face)
+    const hasPerson = results.some((result: any) => 
+      result.label === 'person' && result.score > 0.5
+    );
     
-    // Check if any detected object is a person with high confidence
-    // YOLOS can detect faces more accurately than DETR
-    const hasFace = results.some((result: any) => {
-      const label = result.label.toLowerCase();
-      // Look for person detection with high confidence - person detection usually means face is visible
-      return label === 'person' && result.score > 0.7;
-    });
-    
-    console.log('Face detection result:', hasFace);
-    return hasFace;
+    return hasPerson;
   } catch (error) {
     console.error('Face detection error:', error);
     return false;
