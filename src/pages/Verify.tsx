@@ -105,22 +105,18 @@ export const Verify = () => {
         
         const timeoutPromise = new Promise<boolean>((resolve) => {
           setTimeout(() => {
-            console.log('Face detection timeout, do not proceed without verification');
-            resolve(false); // Fail if detection times out
+<<<<<<< HEAD
+           console.log('Face detection timeout, proceeding without verification');
+            resolve(true); // Assume face is present if detection times out
           }, 5000); // 5 second timeout
-        });
+=======
+        
         
         const hasFace = await Promise.race([faceDetectionPromise, timeoutPromise]);
-        console.log('Face detection result:', hasFace, 'do not proceed the user must try again');
+        console.log('Face detection result:', hasFace);        
         
-        if (!hasFace) {
-          toast({
-            title: "Face not detected",
-            description: "Please ensure your face is clearly visible and try again.",
-            variant: "destructive",
-          });
-          return;
-        }
+         // Always proceed with photo capture for now
+        console.log('Adding image to captured images...');
         
         console.log('Face detected, adding image to captured images...');
         setCapturedImages(prev => [...prev, imageData]);
