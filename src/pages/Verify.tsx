@@ -195,11 +195,6 @@ export const Verify = () => {
       description: "Your information has been submitted successfully.",
     });
     
-    // Navigate back to home with verification complete parameter
-    setTimeout(() => {
-      window.location.href = '/?verified=true';
-    }, 2000);
-    
     setIsProcessing(false);
   };
 
