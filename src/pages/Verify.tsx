@@ -179,7 +179,7 @@ export const Verify = () => {
       };
 
       // Replace with your actual API endpoint
-      const apiEndpoint = 'https://<your-api-id>.execute-api.<region>.amazonaws.com/submitVerification';
+      const apiEndpoint = 'https://z8koegus94.execute-api.eu-north-1.amazonaws.com/submitVerification';
       
       const response = await fetch(apiEndpoint, {
         method: 'POST',
