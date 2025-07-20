@@ -54,20 +54,45 @@ export const VerificationReceipt = ({ formData, images, linkId, recipientEmail }
 
   const handlePanicButton = () => {
     if (confirm("Are you sure you want to send a panic alert? This will immediately notify the trusted contact and authorities if needed.")) {
-      // Simulate sending emergency email
-      if (recipientEmail) {
-        // In a real app, this would be an API call to send actual emails
-        console.log(`Sending emergency alert to: ${recipientEmail}`);
-        console.log("Emergency alert details:", {
-          verificationId: linkId,
-          timestamp: new Date().toISOString(),
-          location: window.location.href,
-          userAgent: navigator.userAgent
-        });
-        
-        alert(`🚨 PANIC ALERT SENT!\n\nEmergency notification has been sent to:\n${recipientEmail}\n\nAuthorities and trusted contacts have been notified.\nVerification ID: ${linkId}`);
+      // Get user's location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const googleMapsLink = `https://maps.google.com/?q=${latitude},${longitude}`;
+            
+            // Prepare email content
+            const subject = encodeURIComponent("Emergency Alert!");
+            const body = encodeURIComponent(`This is a panic alert. Please help me!\nMy location: ${googleMapsLink}`);
+            
+            // Open email app
+            const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+            window.open(mailtoUrl);
+            
+            // Log the emergency event
+            console.log("EMERGENCY ALERT TRIGGERED:", {
+              verificationId: linkId,
+              timestamp: new Date().toISOString(),
+              location: window.location.href,
+              coordinates: { latitude, longitude },
+              userAgent: navigator.userAgent
+            });
+          },
+          (error) => {
+            console.error("Geolocation error:", error);
+            // Fallback without location
+            const subject = encodeURIComponent("Emergency Alert!");
+            const body = encodeURIComponent("This is a panic alert. Please help me!\nLocation could not be determined.");
+            const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+            window.open(mailtoUrl);
+          }
+        );
       } else {
-        alert("🚨 PANIC ALERT ACTIVATED!\n\nEmergency protocols have been triggered.\nTrusted contacts and authorities have been notified.");
+        // Fallback if geolocation not supported
+        const subject = encodeURIComponent("Emergency Alert!");
+        const body = encodeURIComponent("This is a panic alert. Please help me!\nGeolocation not supported on this device.");
+        const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+        window.open(mailtoUrl);
       }
     }
   };
