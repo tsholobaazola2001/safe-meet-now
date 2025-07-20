@@ -41,6 +41,11 @@ export const GenerateLinkForm = ({ onClose }: GenerateLinkFormProps) => {
     const linkId = Math.random().toString(36).substring(2, 15);
     const link = `${window.location.origin}/recipient-details?id=${linkId}`;
     setGeneratedLink(link);
+    
+    // Store trusted contact email for panic button functionality
+    localStorage.setItem('trustedContactEmail', formData.trustedContactEmail);
+    localStorage.setItem('trustedContactName', formData.trustedContactName);
+    
     setStep(3);
   };
 
@@ -53,9 +58,25 @@ export const GenerateLinkForm = ({ onClose }: GenerateLinkFormProps) => {
   };
 
   const sendLink = () => {
+    const text = `Hi! I'd like to share a safety verification link with you for our upcoming meeting. Please click this link to verify your identity: ${generatedLink}`;
+    const encodedText = encodeURIComponent(text);
+    
+    // Try to use Web Share API if available, otherwise fallback to opening sharing options
+    if (navigator.share) {
+      navigator.share({
+        title: 'Safety Verification Link',
+        text: text,
+        url: generatedLink,
+      }).catch(console.error);
+    } else {
+      // Fallback: open WhatsApp sharing
+      const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+      window.open(whatsappUrl, '_blank');
+    }
+    
     toast({
-      title: "Link ready to send!",
-      description: "You can now share this link via WhatsApp, SMS, or email.",
+      title: "Link shared!",
+      description: "The safety verification link has been shared.",
     });
   };
 
